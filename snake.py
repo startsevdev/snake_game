@@ -35,6 +35,14 @@ class Window(object):
         self.score += 1
         pygame.display.set_caption("Score: {}".format(self.score))
 
+    def game_over(self):
+        if self.score > 0:
+            print("Score: {}".format(self.score))
+
+        pygame.time.delay(1000)
+        pygame.event.clear(pygame.KEYDOWN)
+        main()
+
 
 class Segment(object):
     def __init__(self, window, x=0, y=0, side_length=CELL, color=GREEN):
@@ -60,20 +68,35 @@ class Food(Segment):
 
 class Snake(object):
     def __init__(self, window, side_length=CELL):
-        self.x = 0
-        self.y = 0
         self.vector = (1, 0)
-        self.speed = 10
+        self.speed = 20
         self.window = window
         self.surface = window.surface
         self.side_length = side_length
+        self.segments = [Segment(window)]
 
     def draw(self):
-        pygame.draw.rect(self.surface, GREEN, (self.x, self.y, self.side_length, self.side_length))
+        for segment in self.segments:
+            pygame.draw.rect(self.surface, GREEN, (segment.x, segment.y, self.side_length, self.side_length))
 
-    def move(self):
-        self.x += self.vector[0] * self.speed
-        self.y += self.vector[1] * self.speed
+    def move(self, window, food):
+        new_segments = []
+
+        x = self.segments[0].x + self.vector[0] * self.speed
+        y = self.segments[0].y + self.vector[1] * self.speed
+
+        self.check_self_eating(self.window, x, y)
+        self.check_collision(food, window)
+
+        new_segments.append(Segment(self.window, x, y))
+
+        for i in range(1, len(self.segments)):
+            x = self.segments[i - 1].x
+            y = self.segments[i - 1].y
+            new_segments.append(Segment(self.window, x, y))
+
+        self.segments = new_segments
+
         self.draw()
 
     def change_vector(self, key):
@@ -86,18 +109,25 @@ class Snake(object):
         elif key == 276:
             self.vector = LEFT
 
+    def check_self_eating(self, window, x, y):
+        for segment in self.segments[1:]:
+            if abs(segment.x - x) < 20 and abs(segment.y - y) < 20:
+                window.game_over()
+            else:
+                pass
+
     def check_collision(self, food, window):
-        if (not (-1 < self.x < 581)) or (not (-1 < self.y < 581)):
-            if window.score > 0:
-                print("Score: {}".format(window.score))
+        if (not (-1 < self.segments[0].x < 581)) or (not (-1 < self.segments[0].y < 581)):
+            self.window.game_over()
 
-            pygame.time.delay(1000)
-            pygame.event.clear(pygame.KEYDOWN)
-            main()
-
-        elif abs(food.x - self.x) < 20 and abs(food.y - self.y) < 20:
+        if abs(food.x - self.segments[0].x) < 20 and abs(food.y - self.segments[0].y) < 20:
             food.new()
+            self.grow()
             window.change_score()
+
+    def grow(self):
+        last_segment = self.segments[-1]
+        self.segments.append(Segment(self.window, last_segment.x, last_segment.y))
 
 
 def main():
@@ -109,9 +139,10 @@ def main():
         food.draw()
         snake.draw()
         window.update()
-        snake.check_collision(food, window)
+        # snake.check_collision(food, window)
+
         window.clear()
-        snake.move()
+        snake.move(window, food)
 
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -120,7 +151,7 @@ def main():
                 pygame.quit()
                 sys.exit()
 
-        pygame.time.delay(20)
+        pygame.time.delay(40)
 
 
 if __name__ == "__main__":
