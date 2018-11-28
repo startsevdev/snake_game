@@ -4,9 +4,14 @@ import sys
 
 # pygame.init()
 
+CELL = 20
+
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-RED = (255,0,0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
 UP = (0, 1)
 DOWN = (0, -1)
 LEFT = (-1, 0)
@@ -31,18 +36,22 @@ class Window(object):
         pygame.display.set_caption("Score: {}".format(self.score))
 
 
-class Food(object):
-    def __init__(self, window, side_length=20):
-        self.x = random.randint(0, 580)
-        self.y = random.randint(0, 580)
-        self.window = window
-        self.surface = window.surface
+class Segment(object):
+    def __init__(self, window, x=0, y=0, side_length=CELL, color=GREEN):
+        self.x = x
+        self.y = y
         self.side_length = side_length
-
-        self.draw()
+        self.color = color
+        self.surface = window.surface
 
     def draw(self):
-        pygame.draw.rect(self.surface, RED, (self.x, self.y, self.side_length, self.side_length))
+        pygame.draw.rect(self.surface, self.color, (self.x, self.y, self.side_length, self.side_length))
+
+
+class Food(Segment):
+    def __init__(self, window):
+        Segment.__init__(self, window, side_length=CELL, color=RED)
+        self.new()
 
     def new(self):
         self.x = random.randint(0, 580)
@@ -50,17 +59,16 @@ class Food(object):
 
 
 class Snake(object):
-    def __init__(self, window, side_length=20):
+    def __init__(self, window, side_length=CELL):
         self.x = 0
         self.y = 0
         self.vector = (1, 0)
         self.speed = 10
-        self.window = window
         self.surface = window.surface
         self.side_length = side_length
 
     def draw(self):
-        pygame.draw.rect(self.surface, WHITE, (self.x, self.y, self.side_length, self.side_length))
+        pygame.draw.rect(self.surface, GREEN, (self.x, self.y, self.side_length, self.side_length))
 
     def move(self):
         self.x += self.vector[0] * self.speed
