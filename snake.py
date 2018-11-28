@@ -64,6 +64,7 @@ class Snake(object):
         self.y = 0
         self.vector = (1, 0)
         self.speed = 10
+        self.window = window
         self.surface = window.surface
         self.side_length = side_length
 
@@ -87,8 +88,12 @@ class Snake(object):
 
     def check_collision(self, food, window):
         if (not (-1 < self.x < 581)) or (not (-1 < self.y < 581)):
-            pygame.quit()
-            sys.exit()
+            if window.score > 0:
+                print("Score: {}".format(window.score))
+
+            pygame.time.delay(1000)
+            pygame.event.clear(pygame.KEYDOWN)
+            main()
 
         elif abs(food.x - self.x) < 20 and abs(food.y - self.y) < 20:
             food.new()
@@ -109,11 +114,8 @@ def main():
         snake.move()
 
         for event in pygame.event.get():
-            print(event)
-
             if event.type == pygame.KEYDOWN:
                 snake.change_vector(event.key)
-
             elif event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
